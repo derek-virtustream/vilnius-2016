@@ -1,0 +1,43 @@
+heat_template_version: 2014-10-16
+description: Template to show off parameters
+
+parameters:
+    key_name:
+        type: string
+        label: Key Name
+        description: SSH key to be used for all instances
+        default: derek_ssh
+    image_id:
+        type: string
+        label: Image ID
+        description: Image to be used (RHEL/Centos 7 compat) for base OS
+        default: 33a8bd11-7d16-47fe-b123-6c87a33d56da
+    private_net_id:
+        type: string
+        description: ID of private network into which servers get deployed
+        default: a00889c3-e373-47c2-8d8c-a64250e479f7
+
+resources:
+
+    # Wouldn't it be nice if the name of the VM was randomized? Then we could
+    # use this stack more than once in the same project/tenant, without a
+    # naming collision!
+    name_nonce:
+        type: OS::Heat::RandomString
+        properties:
+            length: 16
+            sequence: lowercase
+
+    new_instance:
+        type: OS::Nova::Server
+        properties:
+            key_name: { get_param: key_name }
+            image: { get_param: image_id }
+            flavor: m1.small
+            name:
+                str_replace:
+                    template: random-vm-$NONCE
+                    params:
+                        $NONCE: { get_resource: name_nonce }
+            networks:
+              - network: private

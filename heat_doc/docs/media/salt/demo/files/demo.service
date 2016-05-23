@@ -1,0 +1,10 @@
+[Unit]
+Description=Demo_Service
+After=network.target
+
+[Service]
+ExecStart=/bin/python /opt/minimal_flask.py
+Type=simple
+
+[Install]
+WantedBy=default.target

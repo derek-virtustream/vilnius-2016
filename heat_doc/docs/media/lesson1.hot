@@ -1,0 +1,13 @@
+heat_template_version: 2014-10-16
+description: The SMALLEST possible working HEAT template
+
+resources:
+    cluster_master:
+        type: OS::Nova::Server
+        properties:
+            key_name: derek_ssh
+            image: Centos-7-x86_64
+            flavor: m1.small
+            name: lesson1.server
+            networks:
+              - network: private

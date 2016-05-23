@@ -1,0 +1,20 @@
+site_name: "OpenStack Heat : DevOpsPro 2016"
+theme: simplex
+markdown_extensions:
+    - toc:
+        permalink: True
+
+pages:
+  - Home: index.md
+  - Introduction: index2.md
+  - Examples:
+    - "1. A simple VM": lessons/lesson1.md
+    - "2. Launching from the commandline": lessons/lesson2.md
+    - "3. Parameterized Builds": lessons/lesson3.md
+    - "4. Templating and User Data": lessons/lesson4.md
+    - "5. Resource Groups and Multiple VMs": lessons/lesson5.md
+    - "6. Putting it all together": lessons/lesson6.md
+  - Appendix:
+    - VMWare: vmware.md
+    - Glossary: glossary.md
+    - Prerequisites: prerequisites.md

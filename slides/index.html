@@ -1,0 +1,556 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<title>OpenStack Heat</title>
+
+<link rel="stylesheet" href="css/reveal.css">
+<link rel="stylesheet" href="css/theme/sky.css">
+
+<!-- Theme used for syntax highlighting of code -->
+<link rel="stylesheet" href="lib/css/zenburn.css">
+
+<!-- Printing and PDF exports -->
+<script>
+    var link = document.createElement( 'link' );
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+    document.getElementsByTagName( 'head' )[0].appendChild( link );
+</script>
+<style>
+.share-reveal a {
+    display: inline-block;
+    height: 34px;
+    line-height: 32px;
+    padding: 0 10px;
+    color: #fff;
+    font-family: Helvetica, sans-serif;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 12px;
+    vertical-align: top;
+    text-transform: uppercase;
+    box-sizing: border-box;
+}
+
+.share-reveal .share-reveal-editor {
+    line-height: 30px;
+}
+
+.share-reveal svg {
+    vertical-align: middle;
+}
+
+.share-reveal a + a {
+    margin-left: 10px;
+}
+
+
+.share-reveal-twitter,
+.share-reveal-follow {
+    background-color: #00aced;
+}
+
+.share-reveal-facebook {
+    background-color: #4B71B8;
+}
+
+</style>
+</head>
+<body>
+<div class="reveal">
+    <div class="slides">
+        <section>
+            <h1>OpenStack Heat</h1>
+            Rapid application deployment with OpenStack Heat
+        </section>
+        <section>
+            <section>
+                <h1>What is "Heat"</h1>
+                OpenStack HEAT is a flexible and extensible orchestration tool which allows
+                you to use your OpenStack IaaS to repeatably deploy clusters of
+                servers, networks, services, and other infrastructure.
+            </section>
+            <section><h1>Why "Heat"</h1>
+                <p class="fragment">
+                Heat is what makes clouds rise.
+                </p>
+                <p class="fragment">...sorry...</p>
+            </section>
+        </section>
+        <section>
+            <section>
+                <h1>The 'Plan'</h1>
+                <p>Everybody loves working code, so we'll
+                step through a series of examples, growing in
+                complexity, from deploying a single VM, up
+                to deploying a complex, multi-VM 
+                configuration managed application stack...</p>
+            </section>
+            <section>
+                <ol>
+                    <li >
+                    We'll introduce the Heat YAML domain
+                    specific language with a very brief example
+                    that deploys a single VM from the Horizon
+                    dashboard.
+                    </li>
+                    <li class="fragment">
+                    We'll introduce the OpenStack CLI tool and
+                    deploy a VM using the same YAML, directly 
+                    from the command line. Automation++
+                    </li>
+                    <li class="fragment">
+                    We'll parameterize our template so that you
+                    can customize each deployment by adding
+                    parameter values at launch time
+                    </li>
+                </ol>
+            </section>
+            <section>
+                <ol start=4>
+                    <li >
+                    We'll show how user-data can run scripts on 
+                    new VMs at launch time, and how those 
+                    scripts themselves can be customized via
+                    templating.
+                    </li>
+                    <li  class="fragment">
+                    Resourcegroups will be added, so that we can
+                    scale out our templates to multiple VMs,
+                    grouped by role.
+                    </li>
+                    <li class="fragment">
+                    Finally, we'll deploy a real, minimal 
+                    application stack, with a loadbalancer and
+                    pair of web application servers.
+                    </li>
+                </ol>
+            </section>
+        </section>
+        <section>
+            <section>
+                <h1>Quick setup questions</h1>
+                <ol>
+                    <li>Who has used OpenStack before?</li>
+                    <li>How about the Heat engine?</li>
+                    <li>Who here has the VM setup already?</li>
+                    <li>What problems did you run into?</li>
+                </ol>
+                <p>
+                I'll try to match the tone of the presentation
+                to match the responses here.
+                </p>
+            </section>
+            <section>
+                <h1>Some Helpful Resources</h1>
+                <p><a href="http://devops-pro-2016.armyofevilrobots.com/vmware/">http://devops-pro-2016.armyofevilrobots.com/vmware/</a> 
+                has some useful resources if you haven't seen it already.</p>
+                <p>We <i>might</i> DDOS the conference if you try and download
+                those images though :O</p>
+            </section>
+        </section>
+
+
+
+
+
+        <section>
+            <section>
+                <h1>Example 1: A simple VM</h1>
+                <p>
+                This is the HEAT equivalent of a "hello world" program. The smallest possible
+                HEAT template that is still useful. In this example, we're provisioning a
+                single virtual machine, with one network connection.
+                </p>
+            </section>
+            <section>
+                <h1>That's It?</h1>
+                <pre><code data-trim data-noescape>
+heat_template_version: 2014-10-16
+description: The SMALLEST possible working HEAT template
+
+resources:
+    cluster_master:
+        type: OS::Nova::Server
+        properties:
+            key_name: derek_ssh
+            image: Centos-7-x86_64
+            flavor: m1.small
+            name: lesson1.server
+            networks:
+              - network: private
+                </code></pre>
+            </section>
+            <section>
+                <h1>Launching</h1>
+                <p>If we copy and paste this HOT template into the Horizon
+                UI, and click "next", we'll find ourselves with a few options
+                to fill out. These are the default parameters that are always
+                available on any HOT.</p>
+            </section>
+            <section>
+                <img src="img/lesson1_create_interface.png" alt="create"/>
+            </section>
+            <section>
+                <p>Once we hit the launch button, we're kicked back to the 
+                Orchestration root menu. From here we can go take a look at 
+                the results of our (minimal) labours. Click on the name of the 
+                HOT that you deployed in this view, and you're taken to a view 
+                that shows the different components used for your HEAT stack. While
+                this is only showing a single instance in this view, it can be quite 
+                useful for larger and more complex HEAT stacks.
+                </p>
+            </section>
+            <section>
+                <img src="img/lesson1_heat_result.png" alt="result"/>
+            </section>
+            <section><h1>Live Demo</h1></section>
+        </section>
+
+
+
+
+        <section>
+            <section>
+                <h1>Example 2: Launching Heat stacks from the CLI</h1>
+            </section>
+            <section>
+                <p>Heat wouldn't be very useful if you had to load the UI every time you
+                wanted to launch a stack (well, actually that's <i>still</i> pretty awesome). 
+                Fortunately, OpenStack has both a rest API, and a CLI that targets it. Between
+                these two, it's easy to automate your Heat stack deployments. Great for testing, 
+                CI/CD, deploy on demand for your customers, etc.
+                </p>
+            </section>
+            <section>
+                <h2>The openstackclient CLI</h2>
+                <p>The python-openstackclient tool is now the preferred "unified" CLI
+                to be used against <i>ALL</i> OpenStack APIs, replacing the
+                various standalone clients. It's staightforward to install on 
+                OSX/Linux/Windows:</p>
+                <pre><code>pip install openstackclient</code></pre>
+            </section>
+            <section>
+                <h2>Using the client</h2>
+                <pre><code>±% 
+openstack stack create -f yaml -t docs/media/lesson1.hot lesson1direct
+id: d8d767f8-028d-4340-8f63-bba6d071145f
+stack_name: lesson1direct
+description: The SMALLEST possible working HEAT template
+creation_time: '2016-05-08T23:23:59'
+updated_time: null
+stack_status: CREATE_IN_PROGRESS
+stack_status_reason: Stack CREATE started</code></pre>
+            </section>
+            <section>
+                <h2>Checking the status</h2>
+                <pre><code>±% openstack stack list                                                                                                   !11096
++---------------------------+---------------+-----------------+---------------+---------+
+| ID                        | Stack Name    | Stack Status    | Creation Time | Updated |
++---------------------------+---------------+-----------------+---------------+---------+
+| d8d767f8-...-bba6d071145f | lesson1direct | CREATE_COMPLETE | ....T23:23:59 | None    |
+| d70f465b-...-0e2eef4ae30a | testlesson1   | CREATE_COMPLETE | ....T22:41:13 | None    |
++---------------------------+---------------+-----------------+---------------+---------+</code></pre>
+            </section>
+            <section><h1>Live Demo</h1></section>
+        </section>
+
+
+
+
+
+        <section>
+            <section>
+                <h1>Example 3: Parameters</h1>
+                <p>
+                While the templates we have used so far are nice for getting the
+                same VM build every time, they aren't terribly reusable outside of
+                a very narrow scope. They also aren't very useful for more complex
+                landscapes of servers.
+                </p>
+            </section>
+            <section>
+                <p>
+                To allow for better reusability and flexibility, HOT templates can
+                have parameters, which allow us to create
+                <i>customizable</i> templates that allow for better reuse.
+                </p>
+            </section>
+            <section>
+                <p>
+                There is also the option of creating string <i>resources</i> which can be
+                used to specify autogenerated values, as well as the infrastructure components
+                that we have seen in previous examples. We'll use both in the template below.
+                </p>
+            </section>
+            <section>
+                <p>In this example, we're going to add three new parameters to the template:</p>
+                <ol>
+                    <li>
+                      An SSH key name, so that we can change the default SSH key that is installed
+                      on the new instance. This allows us to redeploy the VM for use by different
+                      users.
+                    </li>
+                    <li class="fragment">
+                      An Image identifier. This allows us to redeploy the same template with
+                      different base images.
+                    </li>
+                </ol>
+            </section>
+            <section>
+                <ol start="3">
+                    <li>
+                       A private network identifier. This gives us the option of targeting
+                       different private networks for deployment. This will allow you to redeploy
+                       this same template in your own environments, just changing this <i>name</i>
+                       to match the one in your tenant's resources.
+                    </li>
+                </ol>
+            </section>
+            <section><h2>Parameters</h2>
+                <pre><code>parameters:
+    key_name:
+        type: string
+        label: Key Name
+        description: SSH key to be used for all instances
+        default: derek_ssh
+    image_id:
+        type: string
+        label: Image ID
+        description: Image to be used (RHEL/Centos 7 compat) for base OS
+        default: 33a8bd11-7d16-47fe-b123-6c87a33d56da
+    private_net_id:
+        type: string
+        description: ID of private network into which servers get deployed
+        default: a00889c3-e373-47c2-8d8c-a64250e479f7
+                </code></pre>
+            </section>
+            <section>
+                <h2>Resources:</h2>
+                <p>Using the same YAML that you use to provision infrastructure,
+                    OpenStack Heat has a variety of methods of generating useful strings, which you
+                    can use for a variety of purposes. In this case, a nonce is of the type OS::Heat::RandomString,
+                    which allows us to repeatedly deploy the same HEAT template into the same
+                    Tenant/Project without having a naming collision. This is very useful when you
+                    are deploying a variety of VMs and want to keep them organized together by name
+                    too.
+</p>
+            </section>
+            <section><h2>Resources</h2>
+                <pre><code>resources:
+    name_nonce:
+        type: OS::Heat::RandomString
+        properties:
+            length: 16
+            sequence: lowercase
+                </code></pre>
+            </section>
+            <section><h1>Live Demo</h1></section>
+        </section>
+
+
+
+
+        <section>
+            <section>
+                <h1>Example 4: User data and templating</h1>
+            </section>
+            <section>
+                <p>
+                Now that we're provisioning our VMs programmatically, wouldn't it be nice if
+                we could _customize_ them so that we could change them automatically in
+                some way from the stock template?
+                </p>
+            </section>
+            <section>
+                <p>
+                Turns out we're in luck! Heat provides
+                access to the _user data_ feature that's available to provision VM instances,
+                and even better, provides a _templating_ language that allows us to
+                customize the _user data_ based on our parameters and other resources.
+                </p>
+            </section>
+            <section>
+                <p>
+                In this example, we'll create the same VM as in the previous iteration, but
+                this time we'll customize it with a templated user data script.
+                </p>
+            </section>
+            <section>
+                <h2>Parameter: file to download</h2>
+                <p>
+                In this example, we'll create the same VM as in the previous iteration, but
+                this time we'll customize it with a templated user data script.
+                </p>
+            </section>
+            <section>
+                <h2>Parameter: file to download</h2>
+                <pre><code>parameters:
+    ...
+    random_file_to_get:
+        type: string
+        description: URL for some random file
+        default: http://192.168.0.160:8080/v1/AUTH_49b7a2b12cb549a88762b9f044bbabe7/saltstuff/nyan.txt</code></pre>
+            </section>
+            <section>
+                <h2>Templating</h2>
+                <p>
+                Then we'll add a template that contains placeholders for the values we want
+                to replace. This looks a lot like string interpolation in other languages.
+                </p>
+            </section>
+            <section>
+                <h2>Templating...</h2>
+                <pre><code>  user_data:
+      str_replace:
+          template: |
+              #!/bin/bash
+              echo 'Welcome to random VM $name_nonce friend!' > /etc/motd
+              curl '$nyan' >> /etc/motd
+          params:
+              $name_nonce: {get_resource: name_nonce}
+              $nyan: {get_param: random_file_to_get}</code></pre>
+            </section>
+            <section>
+                <h2>Templating data sources</h2>
+                <p>
+                Note that there are a various ways of getting values:
+                </p>
+                <ul>
+                    <li><b>get_param</b>: Gets a _parameter_ from the parameters section of the HOT file.
+                      we use that here to get the "name_nonce" random value from the parameters.
+                    </li>
+                    <li class="fragment"><b>get_resource</b>: Gets a defined resource from the resources section of the HOT
+                  file. This allows you to reference other resources you've already created. In
+                  this case we're looking at a string value, but you can reference routers,
+                  networks, ports, etc.
+ 
+                    </li>                  
+                </ul>
+            </section>
+            <section>
+                <ul>
+                    <li><b>get_attr</b>: Not shown here, but allows you to drill down into subcomponents
+                  of other provisioned resources in the HOT file. Great for getting the other
+                  IPs of other servers, etc.
+                  </li>
+                </ul>
+            </section>
+            <section><h1>Live Demo</h1></section>
+            
+        </section>
+        <section><h1>Interlude...</h1>
+            <p>How am I doing. Questions before it gets real? :D</p>
+        </section>
+        <section>
+            <section>
+                <h1>Resource Groups and Multiple VMs</h1>
+            </section>
+            <section>
+                <p>
+                    Now that we can parameterize our builds, 
+                    customize the VMs, and generate
+                    random values like passwords and nonces, 
+                    wouldn't it be nice to be able
+                    to provision more than one VM at a time? 
+                </p>
+                <p class="fragment">
+                    Even better, what if we could iterate
+                    through a list of resources and generate them programmatically?
+            </p></section>
+            <section>
+                <p>
+                While HOT files are declarative, there are 
+                still structures for looping
+                over a series of values, and the syntax 
+                will be vaguely familiar  to anybody that has
+                used an html templating language before.
+                </p>
+
+                <p>
+                We're going to expand the template a lot 
+                this time, and add some new
+                features...
+                </p>
+            </section>
+            <section>
+                <h2>Parameter Additions</h2>
+                <pre><code>    slave_count:
+        type: number
+        label: Slave Count
+        description: Number of slaves
+        default: 2</code></pre>
+                <p class="fragment">
+                Here we are adding a _count_ value that defines 
+                the number of "slave" machines
+                that we're going to have in our new cluster.
+                </p>
+            </section>
+            <section>
+                <h2>Flavors</h2>
+                <pre><code>    master_flavor:
+        type: string
+        label: Master Instance Type
+        description: Type of instance (flavor) to deploy for the master node
+        default: m1.small
+    slave_flavor:
+        type: string
+        label: Slave Instance Type
+        description: Type of instance (flavor) to deploy
+        default: m1.small</code></pre>
+                <p>Here we are setting the flavor for the master
+                and slave node(s) in the cluster. This allows us to change the
+                "virtual hardware" footprint of these VMs.
+                </p>
+            </section>
+            <section>
+                <h2>Modifying the Master Definition</h2>
+                <p>
+                Now, instead of allowing the default settings to define the
+                master VM's networking, we are being more specific by defining
+                the port _before_ the VM is provisioned. 
+                </p><p>That way we can
+                generate the public IP and attach to the port, and more
+                importantly, we can KNOW that IP and reference it externally.
+                </p>
+            </section>
+            <section>
+                <h2>Master Definition Changes</h2>
+                <pre><code>cluster_master_floating_ip:
+    type: OS::Neutron::FloatingIP
+    properties:
+        floating_network_id: { get_param: public_net_id }
+        port_id: { get_resource: cluster_master_port }
+
+cluster_master_port:
+    type: OS::Neutron::Port
+    properties:
+        network_id: { get_param: private_net_id }</code></pre>
+            </section>
+        </section>
+    </div>
+</div>
+
+<script src="lib/js/head.min.js"></script>
+<script src="js/reveal.js"></script>
+
+<script>
+// More info https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+history: true,
+
+// More info https://github.com/hakimel/reveal.js#dependencies
+dependencies: [
+{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+]
+});
+</script>
+<div class="share-reveal" style="display: inline-block; position: absolute; bottom: 25px; left: 50%; margin-left: -88px; z-index: 20;">
+    <a class="share-reveal-editor" href="http://www.virtustream.com/"><img src="img/virtustream_logo.png" alt="Virtustream"/></a>
+</div>
+</body>
+</html>
