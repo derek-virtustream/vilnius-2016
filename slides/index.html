@@ -130,6 +130,10 @@
                     </li>
                 </ol>
             </section>
+            <section>
+                <h2>Live Demos</h2>
+                <img src="http://imgs.xkcd.com/comics/the_cloud.png" alt="the cloud"/>
+            </section>
         </section>
         <section>
             <section>
@@ -448,7 +452,7 @@ stack_status_reason: Stack CREATE started</code></pre>
         </section>
         <section>
             <section>
-                <h1>Resource Groups and Multiple VMs</h1>
+                <h1>Example 5: Resource Groups, Multiple VMs</h1>
             </section>
             <section>
                 <p>
@@ -531,7 +535,144 @@ cluster_master_port:
     properties:
         network_id: { get_param: private_net_id }</code></pre>
             </section>
+            <section>
+                <h2>The Resource Group</h2>
+                <pre><code>slaveresources:
+    type: OS::Heat::ResourceGroup
+    properties:
+        count: { get_param: slave_count }
+        resource_def:</code></pre>
+            <p class="fragment">
+            The first few lines of our ResourceGroup name it, mark it
+            as an object of type ResourceGroup, and create a new property called <i>count</i>
+            which will define the number of times to duplicate the resources.
+            </p>
+            </section>
+            <section>
+                <h2>Nested Resources</h2>
+                <pre><code>type: OS::Nova::Server
+    properties:
+        key_name: { get_param: key_name }
+        image: { get_param: image_id }
+        flavor: { get_param: slave_flavor }
+        name:
+            str_replace:
+                template: slave-$NONCE-%index%
+                params:
+                    $NONCE: { get_resource: name_nonce }
+        networks: [{network: { get_param: private_net_id}}]
+        user_data:
+            str_replace:
+                template: |
+                    #!/bin/bash
+                    echo "Welcome to random VM $HOSTNAME friend! > /etc/motd
+                    curl '$nyan' >> /etc/motd
+                params:
+                    $nyan: {get_param: random_file_to_get}
+                </code></pre>
+            </section>
+            <section><h2>Nesting continued</h2>
+                <p>
+                This stanza isn't much different from the one we have deployed
+                before, but it has a notable addition: The %index% field. This
+                is replaced with the count of VMs that has been created so
+                far, ie: 0, 1, 2, etc. This allows us to use the index in
+                setting parameters.
+                </p>
+            </section>
+            <section><h1>Live Demo</h1></section>
         </section>
+        <section>
+            <section>
+                <h1>Example 6: A Real (tiny) App!</h1>
+                <p>
+                Now that we've built out our virtual compute cluster, we need to actually
+                deploy an application stack to it.
+                </p>
+            </section>
+            <section>
+                <h2>A real app...</h2>
+                <p>
+                In this example, we're going to deploy the same stack as the last time, but
+                then we'll deploy a configuration management system on top, which allows
+                us to then deploy any combination of applications. In this demo, we'll be
+                deploying SaltStack, but if you would rather use Puppet, Chef, Ansible,
+                or some other engine, you could use the same approach.
+                </p>
+            </section>
+            <section>
+                <h2>User-data: Salt Install</h2>
+                <pre><code>[[ -e /usr/bin/git ]] || yum install -y tar wget git
+[[ -e /etc/yum.repos.d/epel-apache-maven.repo ]] || wget http://repos.fedorapeople.org/repos/dchen/apache-maven/epel-apache-maven.repo -O /etc/yum.repos.d/epel-apache-maven.repo
+[[ -e /etc/yum.repos.d/salt-2015.8.repo ]] || rpm -Uvh https://repo.saltstack.com/yum/redhat/salt-repo-2015.8-3.el7.noarch.rpm
+[[ -e /etc/yum.repos.d/epel.repo ]] || yum install -y epel-release
+[[ -e /usr/bin/salt-minion ]] || yum -y install salt-master salt-ssh salt-syndic salt-cloud salt-api salt-minion
+... etc ...
+rpm -q salt-master && chkconfig salt-master on && systemctl start salt-master #Make sure salt is running.
+rpm -q salt-minion && chkconfig salt-minion on && systemctl start salt-minion #Make sure salt is running.</code></pre>
+                <p class="fragment">
+               The first thing we do is get a configuration management tool installed. This allows
+                us to manage the state of the VM with much more control than just shell scripts
+                would allow. Note that similar code appears in both the master and slave VM
+                user-scripts. </p>
+            </section>
+            <section>
+                <p>
+                I've also placed guards around the installation so that the packages
+                don't call yum unless they are missing, to avoid latency on the VM build in the
+                case that we have a specialized VM image prepared.
+                </p>
+                <p>I've pre-installed some of the packages
+                on these VMs to speed up deployment.</p>
+            </section>
+            <section>
+                <h2>High-stating the config</h2>
+                <pre><code>while [[ $(/usr/bin/salt-key --list=acc --out=newline_values_only | wc -l) -le $slave_count ]]; do \
+sleep 5; \
+/usr/bin/salt-key -y -a 'demo-*-$cluster_nonce*'; \
+done
+sleep 20 # It can take a bit for salt minions to restart after registration...
+salt '*' test.ping --out raw -t 300
+salt 'demo-slave*' saltutil.refresh_pillar -t 30
+salt --no-color 'demo-slave*' state.highstate -t 300 >> /var/log/highstate
+sleep 3
+salt --no-color 'demo-master-*' state.highstate -t 300 >> /var/log/highstate</code></pre>
+                <p>
+                Now that salt is installed, we take several steps...
+                </p>
+            </section>
+            <section>
+                <h2>Accepting and Targeting Minions</h2>
+                <ol>
+                    <li>We wait for the minions to join. Note that it 
+                    makes more sense to use the salt 
+                    <a href="https://docs.saltstack.com/en/latest/topics/reactor/">reactor</a> 
+                    feature to handle incoming minion events if 
+                    you want to dynamically scale your application, 
+                    but in this case we're doing things in a simpler
+                    manner, so we're just waiting for _all_ the 
+                    minions to join, since we know how many
+                    there should be.</li>
+                </ol>
+            </section>
+            <section>
+                <h2>Accepting and Targeting Minions</h2>
+                <ol start="2">
+                    <li>We highstate the "slave" minions, where the web application runs. This has the
+   side effect of populating the pillar data with the details about the running
+   Web application servers</li>
+                    <li>We finally highstate the nginx server/proxy, making the application accessible.</li>
+                </ol>
+            </section>
+            <section>
+                <h2>Testing out the results...</h2>
+                <p>When we visit the http://$HOSTNAME/ of the master, 
+                we should (eventually) see the proxied web
+                application.
+                </p>
+            </section>
+        </section>
+        <section><h1>Fin!</h1></section>
     </div>
 </div>
 
