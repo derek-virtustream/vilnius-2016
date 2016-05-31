@@ -1,0 +1,52 @@
+heat_template_version: 2014-10-16
+description: Template to show off parameters
+
+parameters:
+    key_name:
+        type: string
+        label: Key Name
+        description: SSH key to be used for all instances
+        default: derek_ssh
+    image_id:
+        type: string
+        label: Image ID
+        description: Image to be used (RHEL/Centos 7 compat) for base OS
+        default: minimal_salt_centos_7.2
+    private_net_id:
+        type: string
+        description: ID of private network into which servers get deployed
+        default: private
+    random_file_to_get:
+        type: string
+        description: URL for the Salt Recipe stuff
+        default: http://192.168.0.160:8080/v1/AUTH_49b7a2b12cb549a88762b9f044bbabe7/saltstuff/nyan.txt
+resources:
+    name_nonce:
+        type: OS::Heat::RandomString
+        properties:
+            length: 8
+            sequence: lowercase
+
+    new_instance:
+        type: OS::Nova::Server
+        properties:
+            key_name: { get_param: key_name }
+            image: { get_param: image_id }
+            flavor: m1.small
+            name:
+                str_replace:
+                    template: random-vm-$NONCE
+                    params:
+                        $NONCE: { get_resource: name_nonce }
+            networks:
+              - network: private
+            user_data:
+                str_replace:
+                    template: |
+                        #!/bin/bash
+                        echo 'Welcome to random VM $name_nonce friend!' > /etc/motd
+                        curl '$nyan' >> /etc/motd
+                    params:
+                        $name_nonce: {get_resource: name_nonce}
+                        $nyan: {get_param: random_file_to_get}
+

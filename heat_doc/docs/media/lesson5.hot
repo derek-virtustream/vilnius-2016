@@ -1,0 +1,109 @@
+heat_template_version: 2014-10-16
+description: Template to show off parameters
+
+parameters:
+    key_name:
+        type: string
+        label: Key Name
+        description: SSH key to be used for all instances
+        default: derek_ssh
+    slave_count:
+        type: number
+        label: Slave Count
+        description: Number of slaves
+        default: 2
+    image_id:
+        type: string
+        label: Image ID
+        description: Image to be used (RHEL/Centos 7 compat) for base OS
+        default: minimal_salt_centos_7.2
+    master_flavor:
+        type: string
+        label: Master Instance Type
+        description: Type of instance (flavor) to deploy for the master node
+        default: m1.small
+    slave_flavor:
+        type: string
+        label: Slave Instance Type
+        description: Type of instance (flavor) to deploy
+        default: m1.small
+    private_net_id:
+        type: string
+        description: ID of private network into which servers get deployed
+        default: private
+    public_net_id:
+        type: string
+        description: ID of the public net
+        default: ext-net
+    random_file_to_get:
+        type: string
+        description: URL for the Salt Recipe stuff
+        default: http://192.168.0.160:8080/v1/AUTH_49b7a2b12cb549a88762b9f044bbabe7/saltstuff/nyan.txt
+
+
+resources:
+    name_nonce:
+        type: OS::Heat::RandomString
+        properties:
+            length: 8
+            sequence: lowercase
+
+    cluster_master_floating_ip:
+        type: OS::Neutron::FloatingIP
+        properties:
+            floating_network_id: { get_param: public_net_id }
+            port_id: { get_resource: cluster_master_port }
+
+    cluster_master_port:
+        type: OS::Neutron::Port
+        properties:
+            network_id: { get_param: private_net_id }
+
+    new_instance:
+        type: OS::Nova::Server
+        properties:
+            key_name: { get_param: key_name }
+            image: { get_param: image_id }
+            flavor: m1.small
+            name:
+                str_replace:
+                    template: random-vm-$NONCE
+                    params:
+                        $NONCE: { get_resource: name_nonce }
+            networks:
+              - port: { get_resource: cluster_master_port }  
+            user_data:
+                str_replace:
+                    template: |
+                        #!/bin/bash
+                        echo 'Welcome to random VM $name_nonce friend!' > /etc/motd
+                        curl '$nyan' >> /etc/motd
+                    params:
+                        $name_nonce: {get_resource: name_nonce}
+                        $nyan: {get_param: random_file_to_get}
+
+    slaveresources:
+        type: OS::Heat::ResourceGroup
+        properties:
+            count: { get_param: slave_count }
+            resource_def:
+                type: OS::Nova::Server
+                properties:
+                    key_name: { get_param: key_name }
+                    image: { get_param: image_id }
+                    flavor: { get_param: slave_flavor }
+                    name:
+                        str_replace:
+                            template: slave-$NONCE-%index%
+                            params:
+                                $NONCE: { get_resource: name_nonce }
+                    networks: [{network: { get_param: private_net_id}}]
+                    user_data:
+                        str_replace:
+                            template: |
+                                #!/bin/bash
+                                echo "Welcome to slave VM $HOSTNAME friend!" > /etc/motd
+                                curl '$nyan' >> /etc/motd
+                            params:
+                                $nyan: { get_param: random_file_to_get }
+
