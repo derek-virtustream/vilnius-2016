@@ -4,10 +4,19 @@ app:
     - file: /opt/minimal_flask.py
     - file: /etc/systemd/system/demo.service
 
+# Here is what it looks like to install RPMs directly, if you are curious.
 python-flask:
   pkg.installed:
     - sources:
-        - python_flask: salt://demo/files/python-flask....rpm
+        - python-babel: salt://demo/rpms/python-babel-1.3-6.el7.noarch.rpm
+        - python-backports-ssl_match_hostname: salt://demo/rpms/python-backports-ssl_match_hostname-3.4.0.2-4.el7.noarch.rpm
+        - python-flask: salt://demo/rpms/python-flask-0.10.1-4.el7.noarch.rpm
+        - python-itsdangerous: salt://demo/rpms/python-itsdangerous-0.23-2.el7.noarch.rpm
+        - python-jinja2: salt://demo/rpms/python-jinja2-2.7.2-2.el7.noarch.rpm
+        - python-setuptools: salt://demo/rpms/python-setuptools-0.9.8-4.el7.noarch.rpm
+        - python-werkzeug: salt://demo/rpms/python-werkzeug-0.9.1-2.el7.noarch.rpm
+        - pytz: salt://demo/rpms/pytz-2012d-5.el7.noarch.rpm
+        - tzdata: salt://demo/rpms/tzdata-2016d-1.el7.noarch.rpm
 
 /opt/minimal_flask.py:
   file.managed:

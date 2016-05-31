@@ -43,13 +43,16 @@ parameters:
     demo_config_url:
         type: string
         description: URL for the demo Recipe stuff
-        default: http://devops-pro-2016.armyofevilrobots.com.s3.amazonaws.com/media/demo_stuff.tar.gz
-        #default: http://192.168.0.160:8080/v1/AUTH_49b7a2b12cb549a88762b9f044bbabe7/saltstuff/demo_stuff.tar.gz
+        #default: http://devops-pro-2016.armyofevilrobots.com.s3.amazonaws.com/media/demo_stuff.tar.gz
+        default: http://192.168.0.160:8080/v1/AUTH_49b7a2b12cb549a88762b9f044bbabe7/saltstuff/demo_stuff.tar.gz
         #default: http://192.168.4.131:8080/v1/AUTH_ee6ad2970c12487082c85b897c5e29e7/SaltStuff/demo_stuff.tar.gz
 
 resources:
     root_pw:
         type: OS::Heat::RandomString
+        properties:
+            length: 6
+            sequence: lowercase
 
     cluster_nonce:
         type: OS::Heat::RandomString
@@ -138,7 +141,7 @@ resources:
                         done
                         sleep 20 # It can take a bit for salt minions to restart after registration...
                         salt '*' test.ping --out raw -t 300
-                        salt 'demo-slave*' saltutil.refresh_pillar -t 30
+                        #salt 'demo-slave*' saltutil.refresh_pillar -t 30
                         salt --no-color 'demo-slave*' state.highstate -t 300 >> /var/log/highstate
                         sleep 3
                         salt --no-color 'demo-master-*' state.highstate -t 300 >> /var/log/highstate
@@ -203,3 +206,4 @@ outputs:
     root_password:
         description: The root PW for all hosts in the cluster
         value: {get_resource: root_pw}
+    

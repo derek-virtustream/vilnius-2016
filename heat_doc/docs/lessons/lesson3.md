@@ -43,11 +43,11 @@ parameters:
         type: string
         label: Image ID
         description: Image to be used (RHEL/Centos 7 compat) for base OS
-        default: 33a8bd11-7d16-47fe-b123-6c87a33d56da
+        default: minimal_salt_centos_7.2
     private_net_id:
         type: string
         description: ID of private network into which servers get deployed
-        default: a00889c3-e373-47c2-8d8c-a64250e479f7
+        default: private
 ```
 
 ## Resources (strings)
@@ -87,11 +87,12 @@ parameters:
         type: string
         label: Image ID
         description: Image to be used (RHEL/Centos 7 compat) for base OS
-        default: 33a8bd11-7d16-47fe-b123-6c87a33d56da
+        default: minimal_salt_centos_7.2
     private_net_id:
         type: string
         description: ID of private network into which servers get deployed
-        default: a00889c3-e373-47c2-8d8c-a64250e479f7
+        default: private
+
 
 resources:
 
@@ -117,5 +118,5 @@ resources:
                     params:
                         $NONCE: { get_resource: name_nonce }
             networks:
-              - network: private           
+              - network: { get_param: private_net_id }    
 ```

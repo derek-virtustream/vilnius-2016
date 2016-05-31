@@ -146,7 +146,7 @@ parameters:
         type: string
         label: Image ID
         description: Image to be used (RHEL/Centos 7 compat) for base OS
-        default: 33a8bd11-7d16-47fe-b123-6c87a33d56da
+        default: minimal_salt_centos_7.2
     master_flavor:
         type: string
         label: Master Instance Type
@@ -160,11 +160,11 @@ parameters:
     private_net_id:
         type: string
         description: ID of private network into which servers get deployed
-        default: a00889c3-e373-47c2-8d8c-a64250e479f7
+        default: private
     public_net_id:
         type: string
         description: ID of the public net
-        default: de763108-53df-4d06-b553-af46bfede50e
+        default: ext-net
     random_file_to_get:
         type: string
         description: URL for the Salt Recipe stuff

@@ -42,7 +42,7 @@ sleep 3
 salt --no-color 'demo-master-*' state.highstate -t 300 >> /var/log/highstate
 ```
 Now that salt is installed, we take several steps:
-### Accepting all the slaves
+### Accepting all the minions
 
 1. We wait for the minions to join. Note that normally, and for larger installs,
    it makes more sense to use the salt [reactor](https://docs.saltstack.com/en/latest/topics/reactor/) feature to

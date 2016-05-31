@@ -15,7 +15,8 @@ For more detailed installation instructions, see
 ## Using the command line client
 
 ```bash
-±% openstack stack create -f yaml -t docs/media/lesson1.hot lesson1direct                                                 !11094
+source keystonerc_demo_160
+openstack stack create -f yaml -t docs/media/lesson1.hot lesson1direct
 id: d8d767f8-028d-4340-8f63-bba6d071145f
 stack_name: lesson1direct
 description: The SMALLEST possible working HEAT template
@@ -24,7 +25,7 @@ updated_time: null
 stack_status: CREATE_IN_PROGRESS
 stack_status_reason: Stack CREATE started
 
-±% openstack stack list                                                                                                   !11096
+openstack stack list
 +--------------------------------------+---------------+-----------------+---------------------+--------------+
 | ID                                   | Stack Name    | Stack Status    | Creation Time       | Updated Time |
 +--------------------------------------+---------------+-----------------+---------------------+--------------+

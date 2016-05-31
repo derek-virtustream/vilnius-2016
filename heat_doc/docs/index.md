@@ -5,6 +5,9 @@ you to use your OpenStack IaaS to repeatably deploy clusters of
 servers, networks, services, and other infrastructure.
 
 ## UPDATE:
+The entire presentation, all dependencies, and source are available
+at [Github](https://github.com/derek-virtustream/vilnius-2016).
+
 All the files you need are listed below.
 
 Please look at the [VMWare](vmware.md) page and get your VMWare based
